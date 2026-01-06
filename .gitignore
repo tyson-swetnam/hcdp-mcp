@@ -4,6 +4,10 @@
 .env.production
 .env.test
 
+# Claude Code configuration and instructions
+.claude/
+CLAUDE.md
+
 # Python
 __pycache__/
 *.py[cod]
