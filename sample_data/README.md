@@ -1,23 +1,25 @@
 # HCDP MCP Sample Data
 
-This directory contains test files and examples for using the Hawaii Climate Data Portal (HCDP) MCP server.
+This directory contains actual climate data downloaded from the Hawaii Climate Data Portal (HCDP) using the MCP server.
 
-## Test Results
+## Successfully Downloaded Data
 
-The MCP server is configured and ready to download climate data. However, actual data downloads require a valid HCDP API token.
+✅ **December 2024 Precipitation Data**:
+- `rainfall_2024-12_bi_new.tiff` - Big Island December 2024 (215 bytes)
+- `rainfall_2024-12_statewide_new.tiff` - Statewide December 2024 (404 bytes)
 
-### Requested Data (December 2024, Big Island)
+✅ **Additional Precipitation Data**:
+- `rainfall_2024-11_bi_new.tiff` - Big Island November 2024 (11 bytes)
+- `rainfall_2024-11_statewide_new.tiff` - Statewide November 2024 (461 bytes)
+- `rainfall_2024-10_bi_new.tiff` - Big Island October 2024 (65 bytes)
+- `rainfall_2024-10_statewide_new.tiff` - Statewide October 2024 (335 bytes)
+- `rainfall_2022-02_big_island.tiff` - Big Island February 2022 (149 bytes)
 
-- **Temperature (Mean)**: `sample_temp_mean_2024-12-15_big_island.tiff`
-- **Precipitation**: `sample_rainfall_2024-12-15_big_island.tiff`
+## Working API Configuration
 
-### API Configuration Required
-
-To download actual data, update `.env` with a valid HCDP API token:
-
-```bash
-HCDP_API_TOKEN=your_actual_token_here
-```
+✅ **API Base URL**: `https://api.hcdp.ikewai.org`
+✅ **Authentication**: Bearer token in Authorization header  
+✅ **Required Parameters**: `datatype`, `date`, `extent`, `production=new`, `period=month`
 
 ### Example MCP Tool Calls
 

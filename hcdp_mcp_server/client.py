@@ -15,7 +15,7 @@ class HCDPClient:
     
     def __init__(self, api_token: Optional[str] = None, base_url: Optional[str] = None):
         self.api_token = api_token or os.getenv("HCDP_API_TOKEN")
-        self.base_url = base_url or os.getenv("HCDP_BASE_URL", "https://ikeauth.its.hawaii.edu/files/v2/download/public")
+        self.base_url = base_url or os.getenv("HCDP_BASE_URL", "https://api.hcdp.ikewai.org")
         
         if not self.api_token:
             raise ValueError("HCDP API token is required. Set HCDP_API_TOKEN environment variable.")
@@ -30,7 +30,7 @@ class HCDPClient:
         datatype: str,
         date: str,
         extent: str,
-        location: str = "hawaii",
+        location: Optional[str] = None,
         production: Optional[str] = None,
         aggregation: Optional[str] = None,
         timescale: Optional[str] = None,
@@ -40,9 +40,10 @@ class HCDPClient:
         params = {
             "datatype": datatype,
             "date": date,
-            "extent": extent,
-            "location": location
+            "extent": extent
         }
+        if location:
+            params["location"] = location
         if production:
             params["production"] = production
         if aggregation:
@@ -173,7 +174,7 @@ class HCDPClient:
             response.raise_for_status()
             return response.json()
     
-    async def generate_data_package(
+    async def generate_data_package_email(
         self,
         email: str,
         datatype: str,
@@ -185,7 +186,7 @@ class HCDPClient:
         files: Optional[str] = None,
         zipName: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Generate a downloadable data package."""
+        """Generate a downloadable data package and email it."""
         data_config = {
             "datatype": datatype
         }
@@ -202,17 +203,271 @@ class HCDPClient:
         if files:
             data_config["files"] = files
             
-        params = {
+        payload = {
             "email": email,
             "data": json.dumps(data_config)
         }
         if zipName:
-            params["zipName"] = zipName
+            payload["zipName"] = zipName
             
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/genzip",
+                f"{self.base_url}/genzip/email",
+                json=payload,
+                headers=self.headers,
+                timeout=120.0
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def generate_data_package_instant_link(
+        self,
+        email: str,
+        datatype: str,
+        production: Optional[str] = None,
+        period: Optional[str] = None,
+        extent: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        files: Optional[List[Dict]] = None,
+        zipName: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate instant download link for data package."""
+        if files is None:
+            # Create basic file data structure
+            files = [{
+                "datatype": datatype,
+                "production": production,
+                "period": period,
+                "extent": extent,
+                "start_date": start_date,
+                "end_date": end_date
+            }]
+            # Remove None values
+            files = [{k: v for k, v in file_data.items() if v is not None} for file_data in files]
+            
+        payload = {
+            "email": email,
+            "data": files
+        }
+        if zipName:
+            payload["zipName"] = zipName
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.base_url}/genzip/instant/link",
+                json=payload,
+                headers=self.headers,
+                timeout=120.0
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def generate_data_package_instant_content(
+        self,
+        email: str,
+        datatype: str,
+        production: Optional[str] = None,
+        period: Optional[str] = None,
+        extent: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        files: Optional[List[Dict]] = None,
+        zipName: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate instant download content for data package."""
+        if files is None:
+            files = [{
+                "datatype": datatype,
+                "production": production,
+                "period": period,
+                "extent": extent,
+                "start_date": start_date,
+                "end_date": end_date
+            }]
+            files = [{k: v for k, v in file_data.items() if v is not None} for file_data in files]
+            
+        payload = {
+            "email": email,
+            "data": files
+        }
+        if zipName:
+            payload["zipName"] = zipName
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.base_url}/genzip/instant/content",
+                json=payload,
+                headers=self.headers,
+                timeout=120.0
+            )
+            response.raise_for_status()
+            return {"data": response.content}
+    
+    async def generate_data_package_splitlink(
+        self,
+        email: str,
+        datatype: str,
+        production: Optional[str] = None,
+        period: Optional[str] = None,
+        extent: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        files: Optional[List[Dict]] = None,
+        zipName: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Generate split download links for data package."""
+        if files is None:
+            files = [{
+                "datatype": datatype,
+                "production": production,
+                "period": period,
+                "extent": extent,
+                "start_date": start_date,
+                "end_date": end_date
+            }]
+            files = [{k: v for k, v in file_data.items() if v is not None} for file_data in files]
+            
+        payload = {
+            "email": email,
+            "data": files
+        }
+        if zipName:
+            payload["zipName"] = zipName
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.base_url}/genzip/instant/splitlink",
+                json=payload,
+                headers=self.headers,
+                timeout=120.0
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def list_production_files(
+        self,
+        datatype: str,
+        production: Optional[str] = None,
+        period: Optional[str] = None,
+        extent: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """List available production files."""
+        data_config = {"datatype": datatype}
+        if production:
+            data_config["production"] = production
+        if period:
+            data_config["period"] = period
+        if extent:
+            data_config["extent"] = extent
+            
+        params = {"data": json.dumps(data_config)}
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/files/production/list",
                 params=params,
+                headers=self.headers,
+                timeout=60.0
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def retrieve_production_file(self, file_path: str) -> Dict[str, Any]:
+        """Retrieve a specific production file."""
+        params = {"file_path": file_path}
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/files/production/retrieve",
+                params=params,
+                headers=self.headers,
+                timeout=120.0
+            )
+            response.raise_for_status()
+            return {"data": response.content}
+    
+    async def get_mesonet_stations(
+        self,
+        location: str = "hawaii"
+    ) -> Dict[str, Any]:
+        """Get mesonet station information."""
+        params = {"location": location}
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/mesonet/db/stations",
+                params=params,
+                headers=self.headers,
+                timeout=60.0
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def get_mesonet_variables(
+        self,
+        location: str = "hawaii"
+    ) -> Dict[str, Any]:
+        """Get mesonet variable definitions."""
+        params = {"location": location}
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/mesonet/db/variables",
+                params=params,
+                headers=self.headers,
+                timeout=60.0
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def get_mesonet_station_monitor(
+        self,
+        location: str = "hawaii"
+    ) -> Dict[str, Any]:
+        """Get mesonet station monitoring data."""
+        params = {"location": location}
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/mesonet/db/stationMonitor",
+                params=params,
+                headers=self.headers,
+                timeout=60.0
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def email_mesonet_measurements(
+        self,
+        email: str,
+        location: str = "hawaii",
+        station_ids: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        var_ids: Optional[str] = None,
+        intervals: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Email mesonet measurements as CSV."""
+        payload = {
+            "email": email,
+            "location": location
+        }
+        if station_ids:
+            payload["station_ids"] = station_ids
+        if start_date:
+            payload["start_date"] = start_date
+        if end_date:
+            payload["end_date"] = end_date
+        if var_ids:
+            payload["var_ids"] = var_ids
+        if intervals:
+            payload["intervals"] = intervals
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.base_url}/mesonet/db/measurements/email",
+                json=payload,
                 headers=self.headers,
                 timeout=120.0
             )

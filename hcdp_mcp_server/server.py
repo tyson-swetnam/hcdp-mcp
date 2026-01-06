@@ -65,8 +65,8 @@ class GetMesonetDataArgs(BaseModel):
     join_metadata: bool = Field(default=True, description="Include metadata in results")
 
 
-class GenerateDataPackageArgs(BaseModel):
-    """Arguments for generating data packages."""
+class GenerateDataPackageEmailArgs(BaseModel):
+    """Arguments for generating data packages via email."""
     email: str = Field(description="Email address for package delivery")
     datatype: str = Field(description="Climate data type")
     production: str | None = Field(default=None, description="Production level (optional)")
@@ -76,6 +76,57 @@ class GenerateDataPackageArgs(BaseModel):
     end_date: str | None = Field(default=None, description="End date (optional)")
     files: str | None = Field(default=None, description="Specific files to include (optional)")
     zipName: str | None = Field(default=None, description="Custom zip file name (optional)")
+
+
+class GenerateDataPackageInstantArgs(BaseModel):
+    """Arguments for generating instant data packages."""
+    email: str = Field(description="Email address for logging")
+    datatype: str = Field(description="Climate data type")
+    production: str | None = Field(default=None, description="Production level (optional)")
+    period: str | None = Field(default=None, description="Period specification (optional)")
+    extent: str | None = Field(default=None, description="Spatial extent (optional)")
+    start_date: str | None = Field(default=None, description="Start date (optional)")
+    end_date: str | None = Field(default=None, description="End date (optional)")
+    zipName: str | None = Field(default=None, description="Custom zip file name (optional)")
+
+
+class ListProductionFilesArgs(BaseModel):
+    """Arguments for listing production files."""
+    datatype: str = Field(description="Climate data type")
+    production: str | None = Field(default=None, description="Production level (optional)")
+    period: str | None = Field(default=None, description="Period specification (optional)")
+    extent: str | None = Field(default=None, description="Spatial extent (optional)")
+
+
+class RetrieveProductionFileArgs(BaseModel):
+    """Arguments for retrieving a production file."""
+    file_path: str = Field(description="Path to the file to retrieve")
+
+
+class GetMesonetStationsArgs(BaseModel):
+    """Arguments for getting mesonet station info."""
+    location: str = Field(default="hawaii", description="Location")
+
+
+class GetMesonetVariablesArgs(BaseModel):
+    """Arguments for getting mesonet variable definitions."""
+    location: str = Field(default="hawaii", description="Location")
+
+
+class GetMesonetStationMonitorArgs(BaseModel):
+    """Arguments for getting mesonet station monitoring data."""
+    location: str = Field(default="hawaii", description="Location")
+
+
+class EmailMesonetMeasurementsArgs(BaseModel):
+    """Arguments for emailing mesonet measurements."""
+    email: str = Field(description="Email address for CSV delivery")
+    location: str = Field(default="hawaii", description="Location")
+    station_ids: str | None = Field(default=None, description="Comma-separated station IDs (optional)")
+    start_date: str | None = Field(default=None, description="Start date in YYYY-MM-DD format (optional)")
+    end_date: str | None = Field(default=None, description="End date in YYYY-MM-DD format (optional)")
+    var_ids: str | None = Field(default=None, description="Comma-separated variable IDs (optional)")
+    intervals: str | None = Field(default=None, description="Time intervals (optional)")
 
 
 app = Server("hcdp-mcp-server")
@@ -106,9 +157,54 @@ async def handle_list_tools() -> list[Tool]:
             inputSchema=GetMesonetDataArgs.model_json_schema(),
         ),
         Tool(
-            name="generate_data_package",
-            description="Generate downloadable zip packages of climate data with email or instant download options",
-            inputSchema=GenerateDataPackageArgs.model_json_schema(),
+            name="generate_data_package_email",
+            description="Generate downloadable zip packages of climate data and email them",
+            inputSchema=GenerateDataPackageEmailArgs.model_json_schema(),
+        ),
+        Tool(
+            name="generate_data_package_instant_link",
+            description="Generate instant download links for climate data packages",
+            inputSchema=GenerateDataPackageInstantArgs.model_json_schema(),
+        ),
+        Tool(
+            name="generate_data_package_instant_content",
+            description="Generate instant download content for climate data packages",
+            inputSchema=GenerateDataPackageInstantArgs.model_json_schema(),
+        ),
+        Tool(
+            name="generate_data_package_splitlink",
+            description="Generate split download links for large climate data packages",
+            inputSchema=GenerateDataPackageInstantArgs.model_json_schema(),
+        ),
+        Tool(
+            name="list_production_files",
+            description="List available production climate data files",
+            inputSchema=ListProductionFilesArgs.model_json_schema(),
+        ),
+        Tool(
+            name="retrieve_production_file",
+            description="Retrieve a specific production climate data file",
+            inputSchema=RetrieveProductionFileArgs.model_json_schema(),
+        ),
+        Tool(
+            name="get_mesonet_stations",
+            description="Get mesonet weather station information and metadata",
+            inputSchema=GetMesonetStationsArgs.model_json_schema(),
+        ),
+        Tool(
+            name="get_mesonet_variables",
+            description="Get mesonet variable definitions and metadata",
+            inputSchema=GetMesonetVariablesArgs.model_json_schema(),
+        ),
+        Tool(
+            name="get_mesonet_station_monitor",
+            description="Get mesonet station monitoring and status data",
+            inputSchema=GetMesonetStationMonitorArgs.model_json_schema(),
+        ),
+        Tool(
+            name="email_mesonet_measurements",
+            description="Email mesonet measurement data as CSV files",
+            inputSchema=EmailMesonetMeasurementsArgs.model_json_schema(),
         ),
     ]
 
@@ -170,9 +266,9 @@ async def handle_call_tool(name: str, arguments: dict) -> Sequence[TextContent |
                 join_metadata=args.join_metadata
             )
             
-        elif name == "generate_data_package":
-            args = GenerateDataPackageArgs(**arguments)
-            result = await client.generate_data_package(
+        elif name == "generate_data_package_email":
+            args = GenerateDataPackageEmailArgs(**arguments)
+            result = await client.generate_data_package_email(
                 email=args.email,
                 datatype=args.datatype,
                 production=args.production,
@@ -182,6 +278,90 @@ async def handle_call_tool(name: str, arguments: dict) -> Sequence[TextContent |
                 end_date=args.end_date,
                 files=args.files,
                 zipName=args.zipName
+            )
+            
+        elif name == "generate_data_package_instant_link":
+            args = GenerateDataPackageInstantArgs(**arguments)
+            result = await client.generate_data_package_instant_link(
+                email=args.email,
+                datatype=args.datatype,
+                production=args.production,
+                period=args.period,
+                extent=args.extent,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                zipName=args.zipName
+            )
+            
+        elif name == "generate_data_package_instant_content":
+            args = GenerateDataPackageInstantArgs(**arguments)
+            result = await client.generate_data_package_instant_content(
+                email=args.email,
+                datatype=args.datatype,
+                production=args.production,
+                period=args.period,
+                extent=args.extent,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                zipName=args.zipName
+            )
+            
+        elif name == "generate_data_package_splitlink":
+            args = GenerateDataPackageInstantArgs(**arguments)
+            result = await client.generate_data_package_splitlink(
+                email=args.email,
+                datatype=args.datatype,
+                production=args.production,
+                period=args.period,
+                extent=args.extent,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                zipName=args.zipName
+            )
+            
+        elif name == "list_production_files":
+            args = ListProductionFilesArgs(**arguments)
+            result = await client.list_production_files(
+                datatype=args.datatype,
+                production=args.production,
+                period=args.period,
+                extent=args.extent
+            )
+            
+        elif name == "retrieve_production_file":
+            args = RetrieveProductionFileArgs(**arguments)
+            result = await client.retrieve_production_file(
+                file_path=args.file_path
+            )
+            
+        elif name == "get_mesonet_stations":
+            args = GetMesonetStationsArgs(**arguments)
+            result = await client.get_mesonet_stations(
+                location=args.location
+            )
+            
+        elif name == "get_mesonet_variables":
+            args = GetMesonetVariablesArgs(**arguments)
+            result = await client.get_mesonet_variables(
+                location=args.location
+            )
+            
+        elif name == "get_mesonet_station_monitor":
+            args = GetMesonetStationMonitorArgs(**arguments)
+            result = await client.get_mesonet_station_monitor(
+                location=args.location
+            )
+            
+        elif name == "email_mesonet_measurements":
+            args = EmailMesonetMeasurementsArgs(**arguments)
+            result = await client.email_mesonet_measurements(
+                email=args.email,
+                location=args.location,
+                station_ids=args.station_ids,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                var_ids=args.var_ids,
+                intervals=args.intervals
             )
             
         else:

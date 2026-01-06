@@ -1,0 +1,49 @@
+{
+  "downloaded_at": "2024-12-XX",
+  "total_samples": 5,
+  "samples": [
+    {
+      "name": "Rainfall - Big Island - December 2024 - Monthly",
+      "filename": "sample_data/rainfall_2024-12_big_island_monthly.tiff",
+      "datatype": "rainfall",
+      "date": "2024-12",
+      "extent": "bi",
+      "production": "new",
+      "period": "month",
+      "size_bytes": 901160
+    },
+    {
+      "name": "Rainfall Timeseries - Hilo Area - 2024 - Monthly",
+      "filename": "sample_data/timeseries_rainfall_2024_hilo.json",
+      "datatype": "rainfall",
+      "start": "2024-01-01",
+      "end": "2024-12-31",
+      "extent": "bi",
+      "lat": 19.7167,
+      "lng": -155.0833,
+      "production": "new",
+      "period": "month",
+      "data_points": 12
+    },
+    {
+      "name": "Mesonet Stations - Hawaii",
+      "filename": "sample_data/mesonet_stations_hawaii.json",
+      "location": "hawaii",
+      "station_count": 103
+    },
+    {
+      "name": "Mesonet Variables - Hawaii",
+      "filename": "sample_data/mesonet_variables_hawaii.json",
+      "location": "hawaii",
+      "variable_count": 285
+    },
+    {
+      "name": "Mesonet Measurements - Recent",
+      "filename": "sample_data/mesonet_measurements_recent.json",
+      "location": "hawaii",
+      "start_date": "2024-12-01",
+      "end_date": "2024-12-02",
+      "measurement_count": 100
+    }
+  ]
+}

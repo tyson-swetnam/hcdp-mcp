@@ -1,0 +1,12 @@
+{
+  "get_raster_data": "SUCCESS",
+  "get_timeseries_data": "SUCCESS",
+  "get_station_data": "ERROR: ",
+  "get_mesonet_data": "SUCCESS",
+  "get_mesonet_stations": "SUCCESS",
+  "get_mesonet_variables": "SUCCESS",
+  "get_mesonet_station_monitor": "SUCCESS",
+  "list_production_files": "ERROR: Client error '400 Bad Request' for url 'https://api.hcdp.ikewai.org/files/production/list?data=%7B%22datatype%22%3A+%22rainfall%22%2C+%22production%22%3A+%22new%22%2C+%22period%22%3A+%22month%22%2C+%22extent%22%3A+%22bi%22%7D'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400",
+  "generate_data_package_email": "ERROR: Client error '400 Bad Request' for url 'https://api.hcdp.ikewai.org/genzip/email'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400",
+  "generate_data_package_instant_link": "ERROR: Expecting value: line 1 column 1 (char 0)"
+}
